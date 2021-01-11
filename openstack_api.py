@@ -93,17 +93,23 @@ class CinderAPI:
 class NovaAPI:
     def __init__(self, version=2, username=OS_USERNAME, api_key=OS_PASSWORD, project_id=OS_PROJECT_NAME, auth_url=OS_AUTH_URL):
         self.client = None
-        self.client = nvclient.Client(version=version,
-                                      username=username,
-                                      password=api_key,
-                                      project_name=project_id,
-                                      project_domain_name=OS_PROJECT_DOMAIN_NAME,
-                                      auth_url=auth_url,
-                                      http_log_debug=False,
-                                      # cacert=CACERT,
-                                      endpoint_type=OS_ENDPOINT_TYPE,
-                                      # service_type=SERVICE_TYPE,
-                                      user_domain_name=OS_USER_DOMAIN_NAME)
+        try:
+            self.client = nvclient.Client(version=version,
+                                          username=username,
+                                          password=api_key,
+                                          project_name=project_id,
+                                          project_domain_name=OS_PROJECT_DOMAIN_NAME,
+                                          auth_url=auth_url,
+                                          http_log_debug=False,
+                                          endpoint_type=OS_ENDPOINT_TYPE,
+                                          user_domain_name=OS_USER_DOMAIN_NAME)
+        except TypeError:
+            self.client = nvclient.Client(version=version,
+                                          username=username,
+                                          api_key=api_key,
+                                          project_id=project_id,
+                                          auth_url=auth_url,
+                                          http_log_debug=False)
 
     def instance_volume_attach(self, volume_id, instance_id, device):
         return self.client.volumes.create_server_volume(instance_id, volume_id, device)
@@ -133,8 +139,8 @@ class NovaAPI:
     def network_list(self, networks):
         nets = {}
         try:
-            networks = self.client.networks.list()
-            for net in networks:
+            all_nets = self.client.networks.list()
+            for net in all_nets:
                 if net.label in networks:
                     nets[net.label] = net.id
         except:
